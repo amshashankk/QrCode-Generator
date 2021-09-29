@@ -1,8 +1,7 @@
 package main
 
 import (
-	"os"
-
+	middleware "user-athentication-golang/middleware"
 	routes "user-athentication-golang/routes"
 
 	"github.com/gin-gonic/gin"
@@ -10,17 +9,17 @@ import (
 )
 
 func main() {
-	port := os.Getenv("PORT")
+	/* port := os.Getenv("PORT")
 
 	if port == "" {
 		port = "8000"
-	}
+	} */
 
 	router := gin.New()
 	router.Use(gin.Logger())
-
-	routes.AuthRoutes(router)
 	routes.UserRoutes(router)
+
+	router.Use(middleware.Authentication())
 
 	// API-2
 	router.GET("/api-1", func(c *gin.Context) {
@@ -34,5 +33,5 @@ func main() {
 		c.JSON(200, gin.H{"success": "Access granted for api-2"})
 	})
 
-	router.Run(":" + port)
+	router.Run(":8000")
 }
