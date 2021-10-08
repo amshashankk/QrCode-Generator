@@ -1,37 +1,35 @@
 package main
 
 import (
-	middleware "user-athentication-golang/middleware"
-	routes "user-athentication-golang/routes"
-
-	"github.com/gin-gonic/gin"
-	_ "github.com/heroku/x/hmetrics/onload"
+	"image/png"
+	"net/http"
+	"text/template"
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/qr"
 )
 
-func main() {
-	/* port := os.Getenv("PORT")
+type Page struct {
+	Title string
+}
 
-	if port == "" {
-		port = "8000"
-	} */
+func main(){
+	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/qrcode/", viewCodeHandler)
+	http.ListenAndServe(":8000", nil)
+}
 
-	router := gin.New()
-	router.Use(gin.Logger())
-	routes.UserRoutes(router)
+func homeHandler(w http.ResponseWriter, r *http.Request){
+	p := Page{Title: "Qr Code Generator"}
 
-	router.Use(middleware.Authentication())
+	t, _ := template.ParseFiles("qrcode.html")
+	t.Execute(w, p)
+}
 
-	// API-2
-	router.GET("/api-1", func(c *gin.Context) {
+func viewCodeHandler(w http.ResponseWriter, r * http.Request){
+	dataString := r.FormValue("datastring")
 
-		c.JSON(200, gin.H{"success": "Access granted for api-1"})
+	qrCode, _ := qr.Encode(dataString, qr.L, qr.Auto)
+	qrCode, _ = barcode.Scale(qrCode, 100, 100)
 
-	})
-
-	// API-1
-	router.GET("/api-2", func(c *gin.Context) {
-		c.JSON(200, gin.H{"success": "Access granted for api-2"})
-	})
-
-	router.Run(":8000")
+	png.Encode(w, qrCode)
 }
